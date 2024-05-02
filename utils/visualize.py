@@ -86,8 +86,10 @@ def plot_median_files(data_dir):
         match_dirs = list_dirs(os.path.join(data_dir, split))
         # For each match
         for match_dir in match_dirs:
-            file_format_str = os.path.join('{}', 'match{}')
-            _, match_id = parse.parse(file_format_str, match_dir)
+            # file_format_str = os.path.join('{}', 'match{}')
+            # _, match_id = parse.parse(file_format_str, match_dir)
+            match_id = match_dir.split("/")[-1]
+
             if os.path.exists(os.path.join(data_dir, split, f'match{match_id}', 'median.npz')):
                 median = np.load(os.path.join(data_dir, split, f'match{match_id}', 'median.npz'))['median'][..., ::-1] # BGR to RGB
                 cv2.imwrite(os.path.join(data_dir, 'median', f'{split}_m{match_id}.{IMG_FORMAT}'), median)

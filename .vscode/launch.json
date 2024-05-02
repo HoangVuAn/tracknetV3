@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--model_name", "TrackNet", "--seq_len", "8", "--epoch", "30", "--batch_size","2", "--lr_scheduler", "StepLR","--mask_ratio", "0.3","--save_dir", "exp", "--verbose"]
+            // "args": ["--model_name", "TrackNet", "--epoch", "30", "--save_dir", "exp", "--resume_training", "--verbose"]
+            // "args": ["--tracknet_file", "ckpts/TrackNet_best.pt", "--batch_size", "2"]
+        }
+    ]
+}

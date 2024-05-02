@@ -16,109 +16,7 @@ from utils.metric import WBCELoss
 from utils.visualize import plot_heatmap_pred_sample, plot_traj_pred_sample, write_to_tb
 
 
-def mixup(x, y, alpha=0.5):
-    """Returns mixed inputs, pairs of targets.
-    
-        Args:
-            x (torch.Tensor): Input tensor
-            y (torch.Tensor): Target tensor
-            alpha (float): Alpha of beta distribution
 
-        Returns:
-            x_mix (torch.Tensor): Mixed input tensor
-            y_mix (torch.Tensor): Mixed target tensor
-    """
-
-    batch_size = x.size()[0]
-    lamb = np.random.beta(alpha, alpha, size=batch_size)
-    lamb = np.maximum(lamb, 1 - lamb)
-    lamb = torch.from_numpy(lamb[:, None, None, None]).float().to(x.device)
-    index = torch.randperm(batch_size)
-    x_mix = x * lamb + x[index] * (1 - lamb)
-    y_mix = y * lamb + y[index] * (1 - lamb)
-
-    return x_mix, y_mix
-
-def get_random_mask(mask_size, mask_ratio):
-    """ Generate random mask by binomial distribution.
-        1 means masked, 0 means not.
-    
-        Args:
-            mask_size (Tuple[int, int]): Mask size (N, L)
-            mask_ratio (float): Ratio of masked area
-
-        Returns:
-            mask (torch.Tensor): Random mask tensor with shape (N, L, 1)
-    """
-
-    mask = np.random.binomial(1, mask_ratio, size=mask_size)
-    mask = torch.from_numpy(mask).float().cuda().unsqueeze(-1)
-
-    return mask
-
-def train_tracknet(model, optimizer, data_loader, param_dict):
-    """ Train TrackNet model for one epoch.
-
-        Args:
-            model (torch.nn.Module): TrackNet model
-            optimizer (torch.optim): Optimizer
-            data_loader (torch.utils.data.DataLoader): Data loader
-            param_dict (Dict): Parameters
-                - param_dict['alpha'] (float): Alpha of sample mixup
-                - param_dict['verbose'] (bool): Control whether to show progress bar
-                - param_dict['bg_mode'] (str): For visualizing current prediction
-                - param_dict['save_dir'] (str): For saving current prediction
-        
-        Returns:
-            (float): Average loss
-    """
-
-    model.train()
-    epoch_loss = []
-
-    if param_dict['verbose']:
-        data_prob = tqdm(train_loader)
-    else:
-        data_prob = data_loader
-    
-    for step, (_, x, y, c, _) in enumerate(data_prob):
-        optimizer.zero_grad()
-        x, y = x.float().cuda(), y.float().cuda()
-
-        # Sample mixup
-        if param_dict['alpha'] > 0:
-            x, y = mixup(x, y, param_dict['alpha'])
-        
-        y_pred = model(x)
-        loss = WBCELoss(y_pred, y)
-        epoch_loss.append(loss.item())
-        loss.backward()
-        optimizer.step()
-
-        if param_dict['verbose'] and (step + 1) % display_step == 0:
-            data_prob.set_description(f'Training')
-            data_prob.set_postfix(loss=loss.item())
-
-        # Visualize current prediction
-        if (step + 1) % display_step == 0:
-            x, y, y_pred = x.detach().cpu().numpy(), y.detach().cpu().numpy(), y_pred.detach().cpu().numpy()
-            c = c.numpy()
-            
-            # Transform inputs to image format (N, L, H , W, C)
-            if param_dict['bg_mode'] == 'subtract':
-                x = to_img_format(x)
-            elif param_dict['bg_mode'] == 'subtract_concat':
-                x = to_img_format(x, num_ch=4)
-            elif param_dict['bg_mode'] == 'concat':
-                x = to_img_format(x, num_ch=3)
-                x = x[:, 1:, :, :, :]
-            else:
-                x = to_img_format(x, num_ch=3)
-            y = to_img_format(y)
-            y_pred = to_img_format(y_pred)
-            plot_heatmap_pred_sample(x[0], y[0], y_pred[0], c[0], bg_mode=param_dict['bg_mode'], save_dir=param_dict['save_dir'])
-    
-    return float(np.mean(epoch_loss))
    
 def train_inpaintnet(model, optimizer, data_loader, param_dict):
     """ Train InpaintNet model for one epoch.
@@ -182,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_name', type=str, default='TrackNet', choices=['TrackNet', 'InpaintNet'], help='model type')
     parser.add_argument('--seq_len', type=int, default=8, help='sequence length of input')
     parser.add_argument('--epochs', type=int, default=3, help='number of epochs')
-    parser.add_argument('--batch_size', type=int, default=2, help='batch size of training')
+    parser.add_argument('--batch_size', type=int, default=1, help='batch size of training')
     parser.add_argument('--optim', type=str, default='Adam', choices=['Adam', 'SGD', 'Adadelta'], help='optimizer')
     parser.add_argument('--learning_rate', type=float, default=0.001, help='initial learning rate')
     parser.add_argument('--lr_scheduler', type=str, default='', choices=['', 'StepLR'], help='learning rate scheduler')
@@ -222,6 +120,8 @@ if __name__ == '__main__':
         ckpt['param_dict']['resume_training'] = args.resume_training
         ckpt['param_dict']['epochs'] = args.epochs
         ckpt['param_dict']['verbose'] = args.verbose
+        ckpt['param_dict']['save_dir'] = args.save_dir
+
         args = ResumeArgumentParser(ckpt['param_dict'])
 
     print(f'Parameters: {param_dict}')

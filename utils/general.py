@@ -17,7 +17,7 @@ WIDTH = 512
 SIGMA = 2.5
 DELTA_T = 1/math.sqrt(HEIGHT**2 + WIDTH**2)
 COOR_TH = DELTA_T * 50
-IMG_FORMAT = 'png'
+IMG_FORMAT = 'jpg'
 
 
 class ResumeArgumentParser():
@@ -172,7 +172,8 @@ def get_rally_dirs(data_dir, split):
     # Get all match directories in the split
     match_dirs = os.listdir(os.path.join(data_dir, split))
     match_dirs = [os.path.join(split, d) for d in match_dirs]
-    match_dirs = sorted(match_dirs, key=lambda s: int(s.split('match')[-1]))
+    match_dirs = sorted(match_dirs)
+    # sorted_xml_files = sorted(xml_files)
     
     # Get all rally directories in the match directory
     for match_dir in match_dirs:
@@ -409,7 +410,7 @@ def generate_data_frames(video_file):
     # Check if the video has matched csv file
     file_format_str = os.path.join('{}', 'video', '{}.mp4')
     match_dir, rally_id = parse.parse(file_format_str, video_file)
-    csv_file = os.path.join(match_dir, 'csv', f'{rally_id}_ball.csv')
+    csv_file = os.path.join(match_dir, 'csv', f'{rally_id}.csv')
     label_df = pd.read_csv(csv_file, encoding='utf8')
     assert os.path.exists(video_file) and os.path.exists(csv_file), 'Video file or csv file does not exist.'
 

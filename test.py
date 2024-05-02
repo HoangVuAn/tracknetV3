@@ -597,7 +597,7 @@ def test_rally(model, rally_dir, param_dict, save_inpaint_mask=False):
     """
 
     tracknet, inpaintnet = model
-    w, h = Image.open(os.path.join(rally_dir, '0.png')).size
+    w, h = Image.open(os.path.join(rally_dir, '0.jpg')).size
     if save_inpaint_mask:
         w_scaler, h_scaler = 1., 1.
     else:
@@ -793,7 +793,7 @@ def test_rally(model, rally_dir, param_dict, save_inpaint_mask=False):
         
 def test_rally_linear(model, rally_dir, param_dict):
     tracknet, _ = model
-    w, h = Image.open(os.path.join(rally_dir, '0.png')).size
+    w, h = Image.open(os.path.join(rally_dir, '0.jpg')).size
     w_scaler, h_scaler = w / WIDTH, h / HEIGHT
 
     # Test on TrackNet

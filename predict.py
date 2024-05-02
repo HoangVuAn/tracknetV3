@@ -32,7 +32,7 @@ def predict(indices, y_pred=None, c_pred=None, img_scaler=(1, 1)):
     
     # Transform input for heatmap prediction
     if y_pred is not None:
-        y_pred = y_pred > 0.5
+        y_pred = y_pred > 0.1
         y_pred = y_pred.detach().cpu().numpy() if torch.is_tensor(y_pred) else y_pred
         y_pred = to_img_format(y_pred) # (N, L, H, W)
     
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser.add_argument('--video_file', type=str, help='file path of the video')
     parser.add_argument('--tracknet_file', type=str, help='file path of the TrackNet model checkpoint')
     parser.add_argument('--inpaintnet_file', type=str, default='', help='file path of the InpaintNet model checkpoint')
-    parser.add_argument('--batch_size', type=int, default=16, help='batch size for inference')
+    parser.add_argument('--batch_size', type=int, default=1, help='batch size for inference')
     parser.add_argument('--eval_mode', type=str, default='weight', choices=['nonoverlap', 'average', 'weight'], help='evaluation mode')
     parser.add_argument('--save_dir', type=str, default='pred_result', help='directory to save the prediction result')
     parser.add_argument('--output_video', action='store_true', default=False, help='whether to output video with predicted trajectory')

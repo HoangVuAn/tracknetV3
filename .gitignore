@@ -11,3 +11,4 @@ worker.py
 temp.py
 model_compare.py
 *.sh
+exp/

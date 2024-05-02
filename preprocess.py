@@ -21,13 +21,14 @@ if os.path.exists('corrected_test_label'):
                         os.path.join(data_dir, 'drop_frame.json'))
 
 # Generate frames from videos
-for split in ['train', 'test']:
+for split in ['train', 'val', 'test']:
     split_frame_count = 0
     match_dirs = list_dirs(os.path.join(data_dir, split))
     for match_dir in match_dirs:
         match_frame_count = 0
-        file_format_str = os.path.join('{}', 'match{}')
-        _, match_id = parse.parse(file_format_str, match_dir)
+        # file_format_str = os.path.join('{}', 'match{}')
+        # _, match_id = parse.parse(file_format_str, match_dir)
+        match_id = match_dir.split("/")[-1]
         video_files = list_dirs(os.path.join(match_dir, 'video'))
         for video_file in video_files:
             generate_data_frames(video_file)
@@ -46,22 +47,25 @@ for split in ['train', 'test']:
 # Form validation set
 if not os.path.exists(os.path.join(data_dir, 'val')):
     match_dirs = list_dirs(os.path.join(data_dir, 'train'))
-    match_dirs = sorted(match_dirs, key=lambda s: int(s.split('match')[-1]))
-    for match_dir in match_dirs:
+    match_dirs = sorted(match_dirs, key=lambda s: int(s.split('/')[-1]))
+    for match_dir in match_dirs[int(len(match_dirs) * 0.8):]:
         # Pick last rally in each match as validation set
         video_files = list_dirs(os.path.join(match_dir, 'video'))
         file_format_str = os.path.join('{}', 'train', '{}', 'video','{}.mp4')
         _, match_dir, rally_id = parse.parse(file_format_str, video_files[-1]) 
         os.makedirs(os.path.join(data_dir, 'val', match_dir, 'csv'), exist_ok=True)
         os.makedirs(os.path.join(data_dir, 'val', match_dir, 'video'), exist_ok=True)
-        shutil.move(os.path.join(data_dir, 'train', match_dir, 'csv', f'{rally_id}_ball.csv'),
-                    os.path.join(data_dir, 'val', match_dir, 'csv', f'{rally_id}_ball.csv'))
+        shutil.move(os.path.join(data_dir, 'train', match_dir, 'csv', f'{rally_id}.csv'),
+                    os.path.join(data_dir, 'val', match_dir, 'csv', f'{rally_id}.csv'))
         shutil.move(os.path.join(data_dir, 'train', match_dir, 'video', f'{rally_id}.mp4'),
                     os.path.join(data_dir, 'val', match_dir, 'video', f'{rally_id}.mp4'))
         shutil.move(os.path.join(data_dir, 'train', match_dir, 'frame', rally_id),
                     os.path.join(data_dir, 'val', match_dir, 'frame', rally_id))
         shutil.copy(os.path.join(data_dir, 'train', match_dir, 'median.npz'),
                     os.path.join(data_dir, 'val', match_dir, 'median.npz'))
+    temp = match_dirs[int(len(match_dirs) * 0.8):]
+    for match_dir in temp:
+        shutil.rmtree(match_dir)
 
 # Plot median frames, save at <data_dir>/median
 plot_median_files(data_dir)

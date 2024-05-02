@@ -8,7 +8,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 from utils.general import get_rally_dirs, get_match_median, HEIGHT, WIDTH, SIGMA, IMG_FORMAT
 
-data_dir = 'data'
+data_dir = 'data/GolfBallYTCut'
 
 class Shuttlecock_Trajectory_Dataset(Dataset):
     def __init__(self,
@@ -144,7 +144,7 @@ class Shuttlecock_Trajectory_Dataset(Dataset):
 
     def _get_split(self, rally_dir):
         """ Parse the split from the rally directory. """
-        file_format_str = os.path.join(self.root_dir, '{}', 'match{}')
+        file_format_str = os.path.join(self.root_dir, '{}', '{}')
         split, _ = parse.parse(file_format_str, rally_dir)
         return split
     
@@ -212,9 +212,9 @@ class Shuttlecock_Trajectory_Dataset(Dataset):
         if self.data_mode == 'heatmap':
             # Read label csv file
             if 'test' in rally_dir:
-                csv_file = os.path.join(match_dir, 'corrected_csv', f'{rally_id}_ball.csv')
+                csv_file = os.path.join(match_dir, 'corrected_csv', f'{rally_id}.csv')
             else:
-                csv_file = os.path.join(match_dir, 'csv', f'{rally_id}_ball.csv')
+                csv_file = os.path.join(match_dir, 'csv', f'{rally_id}.csv')
             
             assert os.path.exists(csv_file), f'{csv_file} does not exist.'
             label_df = pd.read_csv(csv_file, encoding='utf8').sort_values(by='Frame').fillna(0)
